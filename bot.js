@@ -64,53 +64,6 @@ bot.command("add", (ctx) => {
   ctx.reply("Vazifa nomini kiriting:");
 });
 
-bot.on("message", (ctx) => {
-  const userId = ctx.from.id;
-  const state = userState[userId];
-  if (!state) return;
-
-  if (state.step === "name") {
-    state.task.name = ctx.message.text;
-    state.step = "time";
-    return ctx.reply(
-      "Vazifa vaqtini kiriting (yyyy-mm-dd hh:mm) yoki `skip` deb yozing:"
-    );
-  }
-
-  if (state.step === "time") {
-    if (ctx.message.text.toLowerCase() === "skip") {
-      const now = new Date();
-      now.setHours(now.getHours() + 1);
-      state.task.time = now.toISOString();
-      state.step = "level";
-      return ctx.reply("Darajani kiriting (low/medium/high):");
-    }
-    const date = parseDateTime(ctx.message.text);
-    if (!date) {
-      return ctx.reply(
-        "❌ Noto‘g‘ri format. To‘g‘ri yozing (yyyy-mm-dd hh:mm) yoki `skip` deb yozing."
-      );
-    }
-    state.task.time = date.toISOString();
-    state.step = "level";
-    return ctx.reply("Darajani kiriting (low/medium/high):");
-  }
-
-  if (state.step === "level") {
-    const level = ctx.message.text.toLowerCase();
-    if (!["low", "medium", "high"].includes(level)) {
-      return ctx.reply("Faqat low, medium yoki high deb yozing:");
-    }
-    state.task.level = level;
-    state.task.status = "faol";
-    const tasks = getUserTasks(userId);
-    addTask(userId, state.task);
-    scheduleReminder(userId, tasks.length, state.task);
-    ctx.reply("✅ Vazifa qo‘shildi!");
-    resetState(userId);
-  }
-});
-
 bot.command("tasks", (ctx) => {
   const userId = ctx.from.id;
   resetState(userId);
@@ -161,6 +114,53 @@ bot.command("delete", (ctx) => {
     return ctx.reply("❌ Noto‘g‘ri raqam.");
   deleteTask(userId, index);
   ctx.reply("🗑 Vazifa o‘chirildi.");
+});
+
+bot.on("message", (ctx) => {
+  const userId = ctx.from.id;
+  const state = userState[userId];
+  if (!state) return;
+
+  if (state.step === "name") {
+    state.task.name = ctx.message.text;
+    state.step = "time";
+    return ctx.reply(
+      "Vazifa vaqtini kiriting (yyyy-mm-dd hh:mm) yoki `skip` deb yozing:"
+    );
+  }
+
+  if (state.step === "time") {
+    if (ctx.message.text.toLowerCase() === "skip") {
+      const now = new Date();
+      now.setHours(now.getHours() + 1);
+      state.task.time = now.toISOString();
+      state.step = "level";
+      return ctx.reply("Darajani kiriting (low/medium/high):");
+    }
+    const date = parseDateTime(ctx.message.text);
+    if (!date) {
+      return ctx.reply(
+        "❌ Noto‘g‘ri format. To‘g‘ri yozing (yyyy-mm-dd hh:mm) yoki `skip` deb yozing."
+      );
+    }
+    state.task.time = date.toISOString();
+    state.step = "level";
+    return ctx.reply("Darajani kiriting (low/medium/high):");
+  }
+
+  if (state.step === "level") {
+    const level = ctx.message.text.toLowerCase();
+    if (!["low", "medium", "high"].includes(level)) {
+      return ctx.reply("Faqat low, medium yoki high deb yozing:");
+    }
+    state.task.level = level;
+    state.task.status = "faol";
+    const tasks = getUserTasks(userId);
+    addTask(userId, state.task);
+    scheduleReminder(userId, tasks.length, state.task);
+    ctx.reply("✅ Vazifa qo‘shildi!");
+    resetState(userId);
+  }
 });
 
 bot.start();
