@@ -42,5 +42,3 @@ export function deleteTask(userId, index) {
   }
   return false;
 }
-
-loadTasks();
